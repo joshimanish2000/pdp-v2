@@ -61,38 +61,40 @@ export default function HomePage() {
       title: "Real-time Updates Active",
       description: "New content will appear automatically.",
     });
-
-    // Call subscribeToContentUpdates and store its returned unsubscribe function
-    const cleanupSubscription = subscribeToContentUpdates((newItem) => {
-      // This is the callback for each new item
+  
+    const handleNewItem = (newItem: ContentItem) => {
       console.log("New item received via subscription:", newItem);
       setContentItems(prevItems => {
-        // Avoid duplicates if item already exists
         if (prevItems.find(item => item._id === newItem._id)) {
           return prevItems;
         }
-        
-        const newItemMatchesFilters = 
+  
+        const newItemMatchesFilters =
           (selectedCategory === 'all' || newItem.category === selectedCategory) &&
           (!searchTerm || newItem.title.toLowerCase().includes(searchTerm.toLowerCase()) || (newItem.excerpt && newItem.excerpt.toLowerCase().includes(searchTerm.toLowerCase())));
-
+  
         if (newItemMatchesFilters) {
+          // Defer toast to next tick to avoid updates during render
+          setTimeout(() => {
             toast({
               title: "New Content Added!",
               description: `"${newItem.title}" is now available.`,
             });
-            return [newItem, ...prevItems].sort((a, b) => new Date(b._createdAt).getTime() - new Date(a._createdAt).getTime());
+          }, 0);
+          return [newItem, ...prevItems].sort((a, b) => new Date(b._createdAt).getTime() - new Date(a._createdAt).getTime());
         }
-        return prevItems; 
+        return prevItems;
       });
-    }); // subscribeToContentUpdates call ends here. cleanupSubscription holds the function to call.
-
-    // Return the actual cleanup function for useEffect
+    };
+  
+    const unsubscribe = subscribeToContentUpdates(handleNewItem);
+  
     return () => {
-      cleanupSubscription(); 
+      unsubscribe();
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedCategory, searchTerm, toast]); // Dependencies for useEffect
+  }, [selectedCategory, searchTerm, toast]); // Dependencies for useEffect. loadContent is not needed here as it's called in another effect.
+
 
   useEffect(() => {
     // Simple fade-in animation for page load
