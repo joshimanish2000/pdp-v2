@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import ProductEnquiryForm from '@/components/product-enquiry-form';
 import type { Product } from '@/types/sanity';
 import { fetchProductBySlug } from '@/lib/sanityClient';
+import { urlFor } from '@/lib/sanityClientConfig'; // Import urlFor
 import { notFound } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -22,6 +23,11 @@ export default async function ProductDetailsPage({ params }: ProductPageProps) {
   if (!product) {
     notFound();
   }
+
+  const productImageUrl = product.mainImage 
+    ? urlFor(product.mainImage).width(800).height(600).url()
+    : `https://placehold.co/800x600.png?text=No+Image`;
+  const productImageAlt = product.name || 'Product image';
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-neutral-900">
@@ -52,8 +58,8 @@ export default async function ProductDetailsPage({ params }: ProductPageProps) {
             <Card className="overflow-hidden shadow-xl">
               <div className="relative w-full aspect-[4/3] bg-muted">
                 <Image
-                  src={product.mainImage?.asset.url || `https://placehold.co/800x600.png`}
-                  alt={product.name || 'Product image'}
+                  src={productImageUrl}
+                  alt={productImageAlt}
                   fill
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 60vw, 800px"
                   className="object-cover transition-transform duration-300 hover:scale-105"
@@ -70,11 +76,11 @@ export default async function ProductDetailsPage({ params }: ProductPageProps) {
               </CardHeader>
               <CardContent className="prose prose-sm sm:prose dark:prose-invert max-w-none text-muted-foreground">
                  {product.description && <p className="lead mb-4">{product.description}</p>}
+                {/* TODO: Implement Portable Text rendering if product.details is Portable Text */}
                 {typeof product.details === 'string' ? (
                   <p>{product.details}</p>
                 ) : product.details ? (
-                  // This part can be expanded if product.details is Portable Text
-                  <p>Further details available.</p> 
+                  <p>Further details available. (Structured content rendering not yet implemented)</p> 
                 ) : (
                   <p>No additional details provided for this product.</p>
                 )}
@@ -93,7 +99,7 @@ export default async function ProductDetailsPage({ params }: ProductPageProps) {
               <CardHeader>
                 <CardTitle className="text-xl flex items-center">
                   <Package className="mr-2 h-6 w-6 text-primary" />
-                  Enquire about this Product
+                  Enquire about {product.name}
                 </CardTitle>
                 <CardDescription>Fill out the form below and we'll get back to you.</CardDescription>
               </CardHeader>
@@ -119,14 +125,6 @@ export default async function ProductDetailsPage({ params }: ProductPageProps) {
   );
 }
 
-// Optional: Generate static paths if you have a known set of products
-// export async function generateStaticParams() {
-//   // const products = await fetchAllProductSlugs(); // You'd need a function like this in sanityClient
-//   // return products.map((product) => ({ slug: product.slug.current }));
-//   return []; // For now, rely on dynamic generation
-// }
-
-// Optional: Add metadata generation
 export async function generateMetadata({ params }: ProductPageProps) {
   const product = await fetchProductBySlug(params.slug);
   if (!product) {
