@@ -1,5 +1,6 @@
+
 import type { ContentItem, Product } from '@/types/sanity';
-import { sanityClient, sanityWriteClient, urlFor } from './sanityClientConfig';
+import { sanityClient, sanityWriteClient, urlFor, sanityClientConfig } from './sanityClientConfig';
 
 // GROQ queries
 const contentItemFields = `
