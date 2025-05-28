@@ -56,7 +56,7 @@ export async function fetchContentItems(filter?: { category?: string; searchTerm
     return items;
   } catch (error) {
     console.error("Failed to fetch content items from Sanity:", error);
-    return []; // Return empty array on error
+    throw new Error(`Sanity API request for content items failed. ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 
@@ -71,7 +71,7 @@ export async function fetchCategories(): Promise<string[]> {
     return ['all', ...(categories || [])];
   } catch (error) {
     console.error("Failed to fetch categories from Sanity:", error);
-    return ['all']; // Return basic array on error
+    throw new Error(`Sanity API request for categories failed. ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 
@@ -86,7 +86,7 @@ export async function fetchProductBySlug(slug: string): Promise<Product | null> 
     return product;
   } catch (error) {
     console.error(`Failed to fetch product with slug "${slug}" from Sanity:`, error);
-    return null;
+    throw new Error(`Sanity API request for product "${slug}" failed. ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 

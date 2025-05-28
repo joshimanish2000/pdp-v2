@@ -27,11 +27,12 @@ export default function HomePage() {
       setContentItems(items);
     } catch (e) {
       console.error("Failed to fetch content:", e);
-      setError("Could not load content. Please try refreshing the page.");
+      const errorMessage = e instanceof Error ? e.message : "Could not load content. Please try refreshing the page.";
+      setError(errorMessage);
        toast({
         variant: "destructive",
         title: "Error Loading Content",
-        description: "There was an issue fetching the latest content.",
+        description: "There was an issue fetching the latest content. Check Sanity configuration and network.",
       });
     } finally {
       setIsLoading(false);
@@ -40,16 +41,29 @@ export default function HomePage() {
 
   useEffect(() => {
     async function loadInitialData() {
+      setIsLoading(true);
+      setError(null);
       try {
         const categories = await fetchCategories();
         setAllCategories(categories);
+        // Only attempt to load content if categories were successfully fetched
+        // or if fetchCategories itself doesn't throw but returns a default/empty
         await loadContent('all', '');
       } catch (e) {
-        setError("Failed to load initial page data.");
+        const errorMessage = e instanceof Error ? e.message : "Failed to load initial page data.";
+        setError(`${errorMessage} Please check your Sanity configuration (Project ID, Dataset, CORS) and network connection.`);
+        toast({
+            variant: "destructive",
+            title: "Error Loading Page Data",
+            description: "Could not load essential data. Check Sanity setup and network.",
+        });
+      } finally {
+        setIsLoading(false); 
       }
     }
     loadInitialData();
-  }, [loadContent]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loadContent, toast]); // Added toast to dependency array
 
   useEffect(() => {
     loadContent(selectedCategory, searchTerm);
@@ -57,24 +71,33 @@ export default function HomePage() {
 
   useEffect(() => {
     // Toast for initial subscription activation
-    toast({
-      title: "Real-time Updates Active",
-      description: "New content will appear automatically.",
-    });
+    // Ensure this only runs once or when dependencies truly change.
+    // If Sanity client is not configured, subscribeToContentUpdates returns a no-op.
+    const isSanityConfigured = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID && process.env.NEXT_PUBLIC_SANITY_PROJECT_ID !== 'mockProjectId';
+    if (isSanityConfigured) {
+      toast({
+        title: "Real-time Updates Active",
+        description: "New content will appear automatically.",
+      });
+    }
   
     const handleNewItem = (newItem: ContentItem) => {
       console.log("New item received via subscription:", newItem);
       setContentItems(prevItems => {
         if (prevItems.find(item => item._id === newItem._id)) {
-          return prevItems;
+          return prevItems; // Avoid adding duplicates if already present
         }
   
+        // Check if the new item matches current filters
         const newItemMatchesFilters =
-          (selectedCategory === 'all' || newItem.category === selectedCategory) &&
-          (!searchTerm || newItem.title.toLowerCase().includes(searchTerm.toLowerCase()) || (newItem.excerpt && newItem.excerpt.toLowerCase().includes(searchTerm.toLowerCase())));
+          (selectedCategory === 'all' || (newItem.category && newItem.category.toLowerCase() === selectedCategory.toLowerCase())) &&
+          (!searchTerm || 
+            newItem.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+            (newItem.excerpt && newItem.excerpt.toLowerCase().includes(searchTerm.toLowerCase()))
+          );
   
         if (newItemMatchesFilters) {
-          // Defer toast to next tick to avoid updates during render
+           // Defer toast to next tick to avoid updates during render
           setTimeout(() => {
             toast({
               title: "New Content Added!",
@@ -93,7 +116,7 @@ export default function HomePage() {
       unsubscribe();
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedCategory, searchTerm, toast]); // Dependencies for useEffect. loadContent is not needed here as it's called in another effect.
+  }, [selectedCategory, searchTerm, toast]); 
 
 
   useEffect(() => {
@@ -123,7 +146,7 @@ export default function HomePage() {
   }, []); // Empty dependency array ensures this runs once on mount
 
 
-  if (error && contentItems.length === 0) { // Show full page error only if no content is loaded
+  if (error && contentItems.length === 0 && !isLoading) { // Show full page error only if no content is loaded and not currently loading
     return (
       <Alert variant="destructive" className="mt-10">
         <Info className="h-4 w-4" />
@@ -150,7 +173,16 @@ export default function HomePage() {
         </div>
       )}
 
-      {!isLoading && contentItems.length === 0 && (
+      {/* Display error inline if some content might be visible or if it's a non-initial load error */}
+      {error && (contentItems.length > 0 || isLoading) && (
+         <Alert variant="destructive" className="my-4">
+            <Info className="h-4 w-4" />
+            <AlertTitle>Update Error</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+      )}
+
+      {!isLoading && !error && contentItems.length === 0 && (
          <Alert className="mt-10">
             <Info className="h-4 w-4" />
             <AlertTitle>No Content Found</AlertTitle>
