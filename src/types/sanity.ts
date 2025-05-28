@@ -19,3 +19,18 @@ export interface ContentItem extends SanityDocument {
   category?: string;
   body?: any; // Represents Portable Text or similar rich text structure
 }
+
+export interface Product extends SanityDocument {
+  name: string;
+  slug: { current: string };
+  description?: string;
+  mainImage?: {
+    asset: {
+      url: string;
+    };
+  };
+  imageHint?: string; // For data-ai-hint
+  details?: any; // Could be Portable Text or markdown string
+  price?: number; 
+  category?: string; 
+}
