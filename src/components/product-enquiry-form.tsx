@@ -11,7 +11,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { useState } from 'react';
-import { submitEnquiryAction, enquiryFormSchema, type EnquiryFormSchemaType } from '@/app/actions';
+import { submitEnquiryAction } from '@/app/actions';
+import { enquiryFormSchema, type EnquiryFormSchemaType } from '@/app/schemas';
 
 
 interface ProductEnquiryFormProps extends ComponentProps<'form'> {
