@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { ChangeEvent, Dispatch, SetStateAction } from 'react';
@@ -12,6 +13,7 @@ interface FilterControlsProps {
   searchTerm: string;
   onCategoryChange: (category: string) => void;
   onSearchTermChange: (term: string) => void;
+  disabled?: boolean; // Added disabled prop
 }
 
 export default function FilterControls({
@@ -20,6 +22,7 @@ export default function FilterControls({
   searchTerm,
   onCategoryChange,
   onSearchTermChange,
+  disabled = false, // Default to false
 }: FilterControlsProps) {
   return (
     <div className="mb-8 p-6 bg-card rounded-lg shadow-md flex flex-col md:flex-row gap-6 items-center">
@@ -28,11 +31,17 @@ export default function FilterControls({
           <ListFilter className="h-4 w-4 mr-2" />
           Filter by Category
         </Label>
-        <Select value={selectedCategory} onValueChange={onCategoryChange}>
+        <Select 
+          value={selectedCategory} 
+          onValueChange={onCategoryChange}
+          disabled={disabled} // Apply disabled state
+        >
           <SelectTrigger id="category-filter" className="w-full">
             <SelectValue placeholder="Select a category" />
           </SelectTrigger>
           <SelectContent>
+            {/* Ensure 'all' is always an option, even if categories array is empty or disabled */}
+            {categories.length === 0 && <SelectItem value="all">All</SelectItem>}
             {categories.map((category) => (
               <SelectItem key={category} value={category}>
                 {category.charAt(0).toUpperCase() + category.slice(1)}
@@ -55,6 +64,7 @@ export default function FilterControls({
             value={searchTerm}
             onChange={(e: ChangeEvent<HTMLInputElement>) => onSearchTermChange(e.target.value)}
             className="pl-10 w-full"
+            disabled={disabled} // Apply disabled state
           />
         </div>
       </div>
