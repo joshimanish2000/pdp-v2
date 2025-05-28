@@ -18,5 +18,11 @@ export async function submitEnquiryAction(data: EnquiryFormSchemaType): Promise<
     // submittedAt will be added by createProductEnquiry
   });
 
+  // Add a server-side log if the submission was simulated
+  if (sanityResult.message.toLowerCase().includes("(simulation)") && sanityResult.success) {
+    console.warn(`[ProductEnquiryAction] Submission for product "${data.productName}" by "${data.name}" was SIMULATED because SANITY_API_TOKEN is not set. Data was NOT saved to Sanity.`);
+  }
+
   return sanityResult;
 }
+

@@ -56,6 +56,7 @@ export async function fetchContentItems(filter?: { category?: string; searchTerm
     return items;
   } catch (error) {
     console.error("Failed to fetch content items from Sanity:", error);
+    // Re-throw the error so it can be caught by the calling component
     throw new Error(`Sanity API request for content items failed. ${error instanceof Error ? error.message : String(error)}`);
   }
 }
@@ -71,6 +72,7 @@ export async function fetchCategories(): Promise<string[]> {
     return ['all', ...(categories || [])];
   } catch (error) {
     console.error("Failed to fetch categories from Sanity:", error);
+    // Re-throw the error
     throw new Error(`Sanity API request for categories failed. ${error instanceof Error ? error.message : String(error)}`);
   }
 }
@@ -86,6 +88,7 @@ export async function fetchProductBySlug(slug: string): Promise<Product | null> 
     return product;
   } catch (error) {
     console.error(`Failed to fetch product with slug "${slug}" from Sanity:`, error);
+    // Re-throw the error
     throw new Error(`Sanity API request for product "${slug}" failed. ${error instanceof Error ? error.message : String(error)}`);
   }
 }
@@ -122,7 +125,7 @@ export async function createProductEnquiry(data: any): Promise<{ success: boolea
   if (!sanityWriteClient) {
     console.warn("Sanity write client is not configured. Enquiry not saved to Sanity.");
     // Simulate success for UI purposes if token is missing for local dev
-    return { success: true, message: "Enquiry (simulated) submitted! Real submission requires SANITY_API_TOKEN." };
+    return { success: true, message: "Enquiry submitted (simulation). To save to Sanity, set SANITY_API_TOKEN in .env." };
   }
   try {
     await sanityWriteClient.create({
@@ -136,3 +139,4 @@ export async function createProductEnquiry(data: any): Promise<{ success: boolea
     return { success: false, message: 'Server error: Could not submit enquiry to Sanity.' };
   }
 }
+
