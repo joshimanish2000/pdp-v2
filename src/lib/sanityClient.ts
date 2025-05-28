@@ -120,13 +120,23 @@ export function subscribeToContentUpdates(callback: (item: ContentItem) => void)
   }
 }
 
-// Example of how an enquiry might be saved to Sanity (used in actions.ts)
 export async function createProductEnquiry(data: any): Promise<{ success: boolean; message: string }> {
-  if (!sanityWriteClient) {
-    console.warn("Sanity write client is not configured. Enquiry not saved to Sanity.");
-    // Simulate success for UI purposes if token is missing for local dev
-    return { success: true, message: "Enquiry submitted (simulation). To save to Sanity, set SANITY_API_TOKEN in .env." };
+  const isWritingDisabled = true; // Explicitly disable writing to Sanity
+
+  if (isWritingDisabled) {
+    console.warn("Sanity: Product enquiry submission is currently DISABLED. Data will NOT be saved to Sanity.");
+    return { 
+      success: true, // Still simulate success for UI flow
+      message: "Enquiry submitted (simulation - saving to Sanity is currently disabled)." 
+    };
   }
+
+  // This part will only be reached if isWritingDisabled is false
+  if (!sanityWriteClient) {
+    console.warn("Sanity: API token not configured. Enquiry not saved to Sanity. Submission simulated.");
+    return { success: true, message: "Enquiry submitted (simulation - API token not set). To save to Sanity, set SANITY_API_TOKEN." };
+  }
+
   try {
     await sanityWriteClient.create({
       _type: 'productEnquiry', // Ensure this type exists in your Sanity Studio
@@ -139,4 +149,3 @@ export async function createProductEnquiry(data: any): Promise<{ success: boolea
     return { success: false, message: 'Server error: Could not submit enquiry to Sanity.' };
   }
 }
-
