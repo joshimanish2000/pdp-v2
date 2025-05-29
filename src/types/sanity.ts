@@ -22,8 +22,9 @@ export interface Product extends SanityDocument {
   mainImage?: any; // Sanity image asset reference
   imageHint?: string; // For data-ai-hint
   details?: any; // Could be Portable Text or markdown string
-  price?: number; 
-  category?: string; 
+  price?: number;
+  category?: string;
+  buyNowUrl?: string; // URL for the "Buy Product" button
 }
 
 // Optional: Define a more specific type for Sanity image assets if needed
